@@ -1,6 +1,16 @@
 # cybertyper v0.0.1
 
-**cybertyper** is a minimalistic, terminal-based environment designed for navigating directories and editing files through a purely keyboard-driven interface. By leveraging a Hardware Abstraction Layer (HAL), it simulates file operations and user input handling, making it easy to explore how file systems and text editing could function in a streamlined, extensible environment. Initially conceived as a proof-of-concept, **cybertyper** aims to provide a solid foundation for experimenting with UI rendering, state management, and HAL integration.
+# Cybertyper Project
+
+**Cybertyper** is an early-stage project that transforms an old Cherry G80-3000 keyboard into a standalone device for text editing and file management. Combining hardware and software, it aims to create a minimalistic, keyboard-driven interface inspired by retro typewriters.
+
+## General Description
+
+The project focuses on:
+- **Hardware:** Repurposing the Cherry G80-3000 keyboard with modern electronics, including an ESP32-S3 microcontroller, a compact rectangular bar TFT display, and SD card storage for files.
+- **Software:** A lightweight terminal-based environment for navigating directories and editing text, leveraging a Hardware Abstraction Layer (HAL) for file operations and input handling.
+
+At this stage (v0.0.1), **cybertyper** is a proof-of-concept, with the goal of developing a functional and practical device. Future iterations will refine the design and expand functionality as the project evolves.
 
 **Version:** 0.0.1  
 **Status:** Proof-of-concept / Early development
