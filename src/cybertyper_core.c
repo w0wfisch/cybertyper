@@ -10,9 +10,12 @@
 #define MAX_PATH_LEN 512
 #define INPUT_BUFFER_SIZE 128
 #define MAX_FILE_CONTENT_SIZE 1024
-
 #define MAX_COLUMNS 10
 
+
+//File Explorer
+
+// Is a single column of the File Explorer
 typedef struct {
     char directory[MAX_PATH_LEN];                // Current directory path
     char file_list[MAX_FILES][MAX_FILENAME_LEN]; // List of files/folders in the directory
@@ -20,22 +23,30 @@ typedef struct {
     size_t selected_index;                       // Currently selected index within the directory
 } DirectoryColumn;
 
-// Global variables to manage columns
+// Global arrays and counters manage multiple columns for navigation.
 static DirectoryColumn columns[MAX_COLUMNS];
 static size_t column_count = 1;      // Start with root directory
 static size_t focused_column = 0;    // Currently focused column (0 = leftmost)
 
+//Editor-related globals.
+/*Improvement: 
+Move editor state into a separate editor-focused module. Provide functions to initialize,
+load, save, and manipulate files. This keeps core.c
+smaller and more focused.*/
 static char edit_filename[MAX_FILENAME_LEN];
 static char edit_buffer[MAX_FILE_CONTENT_SIZE];
 static size_t edit_length = 0;
 static size_t edit_cursor_pos = 0; // Position within edit_buffer
 
-// Application states
+//Application state machine.
+/*Improvement:
+Consider a dedicated state machine source file or a well-documented finite state machine.
+Add comments explaining what each state means and what transitions are possible.*/
 typedef enum {
     STATE_NORMAL,
     STATE_RENAME,
     STATE_NEW_FOLDER,
-    STATE_NEW_FILE,    // NEW: State for creating a new file
+    STATE_NEW_FILE,    
     STATE_EDITING
 } AppState;
 
@@ -74,7 +85,17 @@ static void display_editor_screen(void);
 static void handle_editor_input(KeyCode key);
 static void handle_normal_navigation(KeyCode key);           // NEW: Extracted handler
 
-// Initialize the application
+
+
+
+// 	Responsibility: Initializes the application, loads the root directory, clears the display, and sets initial state.
+/*Improvement:
+	•	Consider separating display initialization from directory loading.
+	•	Document what the initialization does clearly.
+	•	If waking from sleep vs. cold start is significant, consider a separate function to handle that scenario.*/
+/*Refactoring:
+	•	Move file/directory initialization into a navigation_init() function.
+	•	Move display clearing and initial UI write into a ui_init() function.*/
 void cybertyper_init(void) {
     hal_display_clear();
 
@@ -98,7 +119,7 @@ void cybertyper_init(void) {
     initialized = true;
 }
 
-// Initialize the directory for a specific column
+// Initialize the directory for a specific column  Populates a DirectoryColumn with files and subdirectories.
 static void load_directory(size_t col, const char *dir) {
     if (col >= MAX_COLUMNS) return; // Safety check
     strncpy(columns[col].directory, dir, MAX_PATH_LEN);
@@ -107,7 +128,11 @@ static void load_directory(size_t col, const char *dir) {
     columns[col].selected_index = 0;
 }
 
-// Enter edit mode for a specific file
+// Loads a file into edit_buffer and transitions to STATE_EDITING.
+/*Improvement:
+	•	Consider moving file reading and writing to a dedicated file I/O module.
+	•	Document what happens if hal_storage_read_file fails.
+	•	Handle large files exceeding buffer size more gracefully.*/
 static void enter_edit_mode(const char *filename) {
     size_t col = focused_column;
     strncpy(edit_filename, filename, MAX_FILENAME_LEN);
@@ -134,7 +159,12 @@ static void enter_edit_mode(const char *filename) {
     last_toggle_time = time(NULL);
 }
 
-// Display all active columns
+// Clears the display and shows the directory columns, including the current selection, and instructions.
+/*Improvement:
+	•	Consider a ui_renderer.c module that takes the columns array and prints it.
+	•	Add comments explaining each step of the rendering process.
+	•	Make the column width a constant defined at the top.
+    */
 static void display_columns(void) {
     hal_display_clear();
     char line[1024] = {0}; // Adjust size as needed
@@ -272,7 +302,12 @@ static void display_editor_screen(void) {
     hal_display_write(display_buffer);
 }
 
-// Handle input while in edit mode
+//  Processes keyboard input in edit mode, handling navigation, insertion, deletion, and saving.
+/*	•	Improvement:
+	•	Add comments before each block explaining what keys do.
+	•	Check bounds carefully before inserting characters.
+	•	Refactoring: Move editor logic into a separate editor.c.
+    */
 static void handle_editor_input(KeyCode key) {
     if (key == KEY_CTRL_S) {
         // Save file
@@ -616,6 +651,14 @@ static void handle_normal_navigation(KeyCode key) {
     }
 }
 
+
+
+
+//main loop handler for timing updates (cursor blinking) and dispatching key events to the appropriate state handler.
+/*Improvement:
+	•	Consider a state machine approach: one function per state that handles keys and updates UI.
+	•	Make cursor blinking timing configurable.
+	•	Add comments explaining each step (blink logic, input handling, display refresh).*/
 void cybertyper_run_cycle(void) {
     if (!initialized) {
         return;
